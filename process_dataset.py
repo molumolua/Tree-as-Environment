@@ -8,8 +8,8 @@ from typing import Any, Dict, List, Optional
 from pathlib import Path
 try:
     from extract import _extract_code_from_row
-except:
-    from SCALER.extract import _extract_code_from_row
+except Exception as error:
+    raise error
 from datetime import datetime
 import json
 import random

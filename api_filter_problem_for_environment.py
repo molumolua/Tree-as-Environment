@@ -14,13 +14,8 @@ try:
     from extract import extract_last_code_block, split_with_input_section, safe_format_template
     from after_extract import verify_meta_json
     from prompt import problem_meta_extractor_prompt
-except:
-    from SCALER.api import batch_get_chat_api
-    from SCALER.logger import setup_logger
-    from SCALER.process_dataset import load_and_prepare_dataset, save_output_parquet, prepare_examples,save_output_jsonl
-    from SCALER.extract import extract_last_code_block, split_with_input_section, safe_format_template
-    from SCALER.after_extract import verify_meta_json
-    from SCALER.prompt import problem_meta_extractor_prompt
+except Exception as error:
+    raise error
 
 from datasets import load_from_disk
 def cut_desc_at_input(desc: str) -> str:

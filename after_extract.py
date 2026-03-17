@@ -4,11 +4,7 @@ try:
     from logger import setup_logger
     from exec_and_verify import build_and_run_reference_solution,write_and_build_referenece_solution,run_reference_solution,import_needed_module_for_python,fix_newlines_in_python_strings,run_generator_with_alarm,sandboxfusion_run
 except:
-    from SCALER.process_dataset import load_and_prepare_dataset,prepare_examples
-    from SCALER.extract import extract_last_code_block,parse_gen_script,parse_one_gen_script,get_function_code_from_str
-    from SCALER.logger import setup_logger
-    from SCALER.exec_and_verify import build_and_run_reference_solution,write_and_build_referenece_solution,run_reference_solution,import_needed_module_for_python,fix_newlines_in_python_strings,run_generator_with_alarm,sandboxfusion_run
-
+    raise ImportError("not find")
 import copy
 from typing import Tuple, Optional, List, Dict, Any
 import inspect

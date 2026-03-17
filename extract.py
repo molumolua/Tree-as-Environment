@@ -4,8 +4,8 @@ from typing import Any, Dict, List, Optional
 # from process_dataset import load_and_prepare_dataset
 try:
     from logger import setup_logger
-except:
-    from SCALER.logger import setup_logger
+except Exception as error:
+    raise error
     
 def show_literal_newlines(s: str) -> str:
     # 只把真实控制字符替换成可见转义；已存在的 "\n" 文本不受影响

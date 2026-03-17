@@ -10,9 +10,8 @@ from tqdm import tqdm
 try:
     from logger import setup_logger
     from process_dataset import load_and_prepare_dataset,prepare_examples,save_output_parquet
-except:
-    from SCALER.logger import setup_logger
-    from SCALER.process_dataset import load_and_prepare_dataset,prepare_examples,save_output_parquet
+except Exception as error:
+    raise error
 import copy
 import shlex
 import subprocess

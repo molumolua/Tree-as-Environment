@@ -1,6 +1,6 @@
 # macOS
 .DS_Store
-
+dataset/*
 # Python
 __pycache__/
 *.py[cod]

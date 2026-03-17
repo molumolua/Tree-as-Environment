@@ -13,12 +13,8 @@ try:
     from process_dataset import load_and_prepare_dataset, save_output_parquet, prepare_examples,save_output_json
     from extract import extract_last_code_block, split_with_input_section, safe_format_template
     from after_extract import find_max_difficulty
-except:
-    from SCALER.api import batch_get_chat_api
-    from SCALER.logger import setup_logger
-    from SCALER.process_dataset import load_and_prepare_dataset, save_output_parquet, prepare_examples,save_output_json
-    from SCALER.extract import extract_last_code_block, split_with_input_section, safe_format_template
-    from SCALER.after_extract import find_max_difficulty
+except Exception as error:
+    raise error
 
 
 import numpy as np

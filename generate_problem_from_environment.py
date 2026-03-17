@@ -1,9 +1,8 @@
 try:
     from after_extract import generate_problem_detail_and_ground_truth,str_to_float_list_or_none
     from logger import setup_logger
-except:
-    from SCALER.after_extract import generate_problem_detail_and_ground_truth,str_to_float_list_or_none
-    from SCALER.logger import setup_logger
+except Exception as error:
+    raise error
 def get_problems(example, input_difficultys, sandboxfusion_url, logger=None,
                  max_try=3, with_instruction=True):
     template = '''

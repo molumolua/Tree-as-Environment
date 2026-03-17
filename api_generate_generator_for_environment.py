@@ -15,15 +15,9 @@ try:
     from extract import extract_last_code_block, split_with_input_section, safe_format_template
     from after_extract import verify_and_exec_generator_for_environment_combined,new_random_get_json_object
     from api_filter_problem_for_environment import filter_output_problems,append_instruction
-except:
-    from SCALER.api import batch_get_chat_api
-    from SCALER.prompt import testcase_generator_prompt
-    from SCALER.logger import setup_logger
-    from SCALER.process_dataset import load_and_prepare_dataset, save_output_jsonl, prepare_examples
-    from SCALER.extract import extract_last_code_block, split_with_input_section, safe_format_template
-    from SCALER.after_extract import verify_and_exec_generator_for_environment_combined,new_random_get_json_object
-    from SCALER.api_filter_problem_for_environment import filter_output_problems,append_instruction
-    
+except Exception as error:
+    raise error
+
 
 # ---------- main ----------
 
