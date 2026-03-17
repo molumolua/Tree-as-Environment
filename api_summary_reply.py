@@ -27,7 +27,8 @@ Your task: summarize this reply by splitting it into a sequence of steps. Each s
 Rules:
 1. Each step may use the given initial conditions and/or conclusions from previous steps as its "conditions".
 2. Every string in "conditions" must be an exact, character-for-character copy of either (a) one of the initial conditions listed below, or (b) the "conclusion" of some earlier step in your output. Do not invent or rephrase any condition.
-3. Output only one JSON array of such step objects, wrapped in a fenced code block. Use this format:
+3. The conclusion of the **last** step must directly answer or solve the question posed above; it should be the final answer to the question.
+4. Output only one JSON array of such step objects, wrapped in a fenced code block. Use this format:
 
 ```json
 [
@@ -178,7 +179,7 @@ def main():
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--timeout", type=int, default=300)
     parser.add_argument("--batch_size", type=int, default=256)
-    parser.add_argument("--inner_max_try", type=int, default=3)
+    parser.add_argument("--inner_max_try", type=int, default=1)
 
     args = parser.parse_args()
 
