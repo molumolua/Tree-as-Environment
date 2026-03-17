@@ -13,7 +13,7 @@ except Exception as error:
 
 def pre_fun(example: Dict[str, Any]) -> str:
     """用 question 字段作为 prompt。"""
-    return example.get("question", "")
+    return example.get("question", "") +f"\nPlease reason step by step, and put your final answer within \\boxed{{}}."
 
 
 def post_fun(example: Dict[str, Any], reply: str) -> None:
@@ -41,10 +41,9 @@ def main():
     parser.add_argument("--save_meta_name", type=str, default="output_with_answer_meta.json")
     # 推理与并行
     parser.add_argument("--model", type=str, default="glm-4.7", help="batch_get_chat_api 使用的模型")
-    parser.add_argument("--n_processes", type=int, default=2, help="API 并行进程数")
-    parser.add_argument("--temperature", type=float, default=0.0, help="采样温度")
-    parser.add_argument("--timeout", type=int, default=60, help="单次请求超时（秒）")
-    parser.add_argument("--think", action="store_true", default=False, help="是否开启 think 模式")
+    parser.add_argument("--n_processes", type=int, default=15, help="API 并行进程数")
+    parser.add_argument("--temperature", type=float, default=1.0, help="采样温度")
+    parser.add_argument("--timeout", type=int, default=300, help="单次请求超时（秒）")
     # 批次与重试
     parser.add_argument("--batch_size", type=int, default=256, help="每批样本数")
     parser.add_argument("--inner_max_try", type=int, default=3, help="单条请求最大重试次数")
@@ -103,8 +102,7 @@ def main():
             n_processes=args.n_processes,
             temperature=args.temperature,
             timeout=args.timeout,
-            max_try=args.inner_max_try,
-            think=args.think,
+            max_try=args.inner_max_try
         )
         # 保存为 parquet（含 answer 的完整 examples）
         save_output_parquet(

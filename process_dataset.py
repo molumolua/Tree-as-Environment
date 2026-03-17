@@ -6,10 +6,6 @@ from datetime import datetime
 from datasets import load_dataset
 from typing import Any, Dict, List, Optional
 from pathlib import Path
-try:
-    from extract import _extract_code_from_row
-except Exception as error:
-    raise error
 from datetime import datetime
 import json
 import random
@@ -192,12 +188,12 @@ def prepare_examples(ds,logger,start_idx=0,max_rows=None,extract_code=False):
 
         for r in rows:
             ex = dict(r)
-            if extract_code:
-                code = _extract_code_from_row(r)
-                if not code:
-                    # 没拿到代码就跳过
-                    continue
-                ex["code"] = code  # 统一字段名，供 pre_fun 使用
+            # if extract_code:
+            #     code = _extract_code_from_row(r)
+            #     if not code:
+            #         # 没拿到代码就跳过
+            #         continue
+            #     ex["code"] = code  # 统一字段名，供 pre_fun 使用
             examples.append(ex)
 
         taken += len(rows)

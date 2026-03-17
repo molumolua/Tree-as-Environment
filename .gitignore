@@ -2,6 +2,8 @@
 .DS_Store
 dataset/*
 save/*
+model/*
+uv.sh
 # Python
 __pycache__/
 *.py[cod]

@@ -2,8 +2,8 @@ from openai import OpenAI
 import openai
 import time
 import os
-import time
 import logging
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from functools import partial
 from multiprocessing import Pool
 from tqdm import tqdm
@@ -17,21 +17,23 @@ client = ZhipuAiClient(api_key="")
 # API_KEY=None
 # MODEL="gpt-5"
 # client = OpenAI(base_url=BASE_URL,api_key=API_KEY)
-def get_oai_completion(prompt,model,temperature,think=False,stream=False):
+def get_oai_completion(prompt, model, temperature, think=False, stream=False, timeout=None):
     try:
         # print(prompt)
-        response = client.chat.completions.create(
+        create_kw = dict(
             model=model,
             temperature=temperature,
             messages=[
-                # {"role": "system", "content": "You are a helpful assistant."},
                 {
                     "role": "user",
                     "content": prompt
                 }
             ],
-            stream=stream
+            stream=stream,
         )
+        if timeout is not None:
+            create_kw["timeout"] = float(timeout)
+        response = client.chat.completions.create(**create_kw)
         if stream:
             answer=stream_get_answer(response)
             # print(answer)
@@ -125,7 +127,24 @@ def get_answer_from_chat_model(prompt, logger=None, eng='gpt-3.5-turbo', tempera
             logger.error(f"Max retries reached for question: {prompt}") if logger else None
             return ""
         try:
-            return  get_oai_completion(prompt,eng,temperature,think)
+            if timeout is not None and timeout > 0:
+                with ThreadPoolExecutor(max_workers=1) as ex:
+                    fut = ex.submit(
+                        get_oai_completion,
+                        prompt, eng, temperature,
+                        think=think, stream=False, timeout=timeout,
+                    )
+                    return fut.result(timeout=timeout)
+            return get_oai_completion(prompt, eng, temperature, think=think, stream=False, timeout=timeout)
+        except FuturesTimeoutError:
+            num_exception += 1
+            if logger:
+                logger.warning(f"Request timeout after {timeout}s for question (try {num_exception}/{max_try}).")
+            if max_try > 0 and num_exception >= max_try:
+                return ""
+            time.sleep(min(num_exception, 2))
+            is_success = False
+            continue
         except Exception as e:
             num_exception += 1
             sleep_time = min(num_exception, 2)
