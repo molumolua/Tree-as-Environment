@@ -18,7 +18,7 @@ def pre_fun(example: Dict[str, Any]) -> str:
 
 def post_fun(example: Dict[str, Any], reply: str) -> None:
     """将 API 返回写入 answer 字段。"""
-    example["answer"] = reply
+    example["reply"] = reply
 
 
 def main():
@@ -40,8 +40,8 @@ def main():
     parser.add_argument("--save_name", type=str, default="output_with_answer.parquet")
     parser.add_argument("--save_meta_name", type=str, default="output_with_answer_meta.json")
     # 推理与并行
-    parser.add_argument("--model", type=str, default="gpt-4", help="batch_get_chat_api 使用的模型")
-    parser.add_argument("--n_processes", type=int, default=16, help="API 并行进程数")
+    parser.add_argument("--model", type=str, default="glm-4.7", help="batch_get_chat_api 使用的模型")
+    parser.add_argument("--n_processes", type=int, default=2, help="API 并行进程数")
     parser.add_argument("--temperature", type=float, default=0.0, help="采样温度")
     parser.add_argument("--timeout", type=int, default=60, help="单次请求超时（秒）")
     parser.add_argument("--think", action="store_true", default=False, help="是否开启 think 模式")
@@ -106,15 +106,14 @@ def main():
             max_try=args.inner_max_try,
             think=args.think,
         )
-
-    # 保存为 parquet（含 answer 的完整 examples）
-    save_output_parquet(
-        output_problems=examples,
-        save_dir_path=save_dir_path,
-        logger=logger,
-        save_name=args.save_name,
-        meta_name=args.save_meta_name,
-    )
+        # 保存为 parquet（含 answer 的完整 examples）
+        save_output_parquet(
+            output_problems=examples,
+            save_dir_path=save_dir_path,
+            logger=logger,
+            save_name=args.save_name,
+            meta_name=args.save_meta_name,
+        )
     logger.info(f"Saved to {save_dir_path / args.save_name}")
 
 
