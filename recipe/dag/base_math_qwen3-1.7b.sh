@@ -17,6 +17,8 @@ test_and_save_freq=20
 n_resp_per_prompt=8
 train_prompt_bsz=64
 train_prompt_mini_bsz=64
+val_before_train=True
+
 
 
 
@@ -37,9 +39,6 @@ clip_ratio_high=0.2
 max_prompt_length=$((1024 * 8))
 max_response_length=$((1024 * 8))
 
-enable_overlong_buffer=False
-overlong_buffer_len=0
-overlong_penalty_factor=1.0
 
 loss_agg_mode="token-mean"
 # loss_agg_mode="seq-mean-token-sum"
@@ -137,7 +136,7 @@ PYTHONUNBUFFERED=1 python3 -m recipe.dag.main_dapo \
     trainer.experiment_name="${exp_name}" \
     trainer.n_gpus_per_node="${num_gpus}" \
     trainer.nnodes=1 \
-    trainer.val_before_train=False \
+    trainer.val_before_train=${val_before_train} \
     trainer.test_freq=${test_and_save_freq} \
     trainer.save_freq=${test_and_save_freq} \
     trainer.total_epochs=${epoch} \
