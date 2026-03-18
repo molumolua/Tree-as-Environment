@@ -494,15 +494,19 @@ class RayDAPOTrainer(RayPPOTrainer):
         self.val_dataset = val_dataset
 
         if train_dataset is None:
-            train_dataset = create_rl_dataset(
-                self.config.data.train_files,
-                self.config.data,
-                self.tokenizer,
-                self.processor,
-                is_train=True,
-                max_samples=self.config.data.get("train_max_samples", -1),
-            )
-        self.train_dataset = [ item for item in train_dataset]
+            import pandas as pd
+            train_files = self.config.data.train_files
+            if isinstance(train_files, str):
+                train_files = [train_files]
+            else:
+                train_files = list(train_files)
+            dfs = [pd.read_parquet(f) for f in train_files]
+            train_df = pd.concat(dfs, ignore_index=True)
+            self.train_dataset = train_df.to_dict("records")
+            max_samples = self.config.data.get("train_max_samples", -1)
+            if max_samples > 0:
+                self.train_dataset = self.train_dataset[:max_samples]
+        self.train_dataset = [item for item in train_dataset]
 
         print(f"Train dataset size: {len(self.train_dataset)}, train_data_list length: {len(self.train_data_list)}")
 
