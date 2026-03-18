@@ -162,6 +162,7 @@ class RayDAPOTrainer(RayPPOTrainer):
 
         batch_size = self.config.data.train_batch_size
         init_train_data = [ get_problem_from_example(example) for example in self.train_dataset[:batch_size]]
+        print("init_train_data[0]:",init_train_data[0])
         inmemory_dataloader = self.createInmemoryDataLoader(init_train_data)
         problem_index = batch_size
 

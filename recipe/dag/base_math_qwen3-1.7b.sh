@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 export WANDB_MODE=offline
-dataset_name="Tree-as-Environment/filtered_train"
+dataset_name="Tree-as-Environment"
 model_name="Qwen3-1.7B-Base"
 offload=False
 ref_offload=False
 num_gpus=8
 tensor_model_parallel_size=4
-
+reward_model_name="TIGER-Lab/general-verifier"
 epoch=10000
 project_name='DAG'
 
@@ -53,8 +53,9 @@ filter_groups_metric=acc
 # Paths
 RAY_DATA_HOME=${RAY_DATA_HOME:-"."}
 MODEL_PATH=${MODEL_PATH:-"../Model/Qwen/${model_name}"}
+REWARD_MODEL_PATH=${REWARD_MODEL_PATH:-"../Model/${reward_model_name}"}
 CKPTS_DIR=${CKPTS_DIR:-"${RAY_DATA_HOME}/ckpts/${project_name}/${exp_name}"}
-TRAIN_FILE=${TRAIN_FILE:-"../Dataset-P/${dataset_name}.parquet"}
+TRAIN_FILE=${TRAIN_FILE:-"../Dataset-P/Tree-as-Environment/filtered_train.parquet"}
 TEST_FILE=${TEST_FILE:-["../Dataset-P/bbeh_data.parquet","../Dataset-P/think_MATH-500_MATH-500-processed.parquet","../Dataset-P/think_amc23_amc23_test.parquet","../Dataset-P/think_aime24_aime24_test.parquet","../Dataset-P/MMLU-Pro-Valid.parquet","../Dataset-P/GPQA-Diamond-Test.parquet"]}
 
 # Algorithm
@@ -131,10 +132,6 @@ PYTHONUNBUFFERED=1 python3 -m recipe.dag.main_dapo \
     algorithm.filter_groups.enable=${enable_filter_groups} \
     algorithm.filter_groups.max_num_gen_batches=${max_num_gen_batches} \
     algorithm.filter_groups.metric=${filter_groups_metric} \
-    reward_model.reward_manager=dapo \
-    reward_model.overlong_buffer.enable=${enable_overlong_buffer} \
-    reward_model.overlong_buffer.len=${overlong_buffer_len} \
-    reward_model.overlong_buffer.penalty_factor=${overlong_penalty_factor} \
     trainer.logger=['console','wandb'] \
     trainer.project_name="${project_name}" \
     trainer.experiment_name="${exp_name}" \
@@ -147,6 +144,11 @@ PYTHONUNBUFFERED=1 python3 -m recipe.dag.main_dapo \
     trainer.default_local_dir="${CKPTS_DIR}" \
     trainer.resume_mode=auto \
     +trainer.max_actor_ckpt_to_keep=1 \
+    reward_model.reward_manager=native \
+    reward_model.enable=True \
+    reward_model.model.path="${REWARD_MODEL_PATH}" \
+    reward_model.strategy=verifier \
+    reward_model.reward_manager=naive \
     +trainer.enable_update=True \
     +trainer.upgrade_threshold=0.75 \
     +trainer.downgrade_threshold=0.25 
