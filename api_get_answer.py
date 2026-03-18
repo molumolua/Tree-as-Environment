@@ -46,7 +46,7 @@ def main():
     parser.add_argument("--timeout", type=int, default=300, help="单次请求超时（秒）")
     # 批次与重试
     parser.add_argument("--batch_size", type=int, default=256, help="每批样本数")
-    parser.add_argument("--inner_max_try", type=int, default=3, help="单条请求最大重试次数")
+    parser.add_argument("--inner_max_try", type=int, default=1, help="单条请求最大重试次数")
 
     args = parser.parse_args()
 
