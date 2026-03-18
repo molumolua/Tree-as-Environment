@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 export WANDB_MODE=offline
-dataset_name="filtered_train"
+dataset_name="Tree-as-Environment/filtered_train"
 model_name="Qwen3-1.7B-Base"
 offload=False
 ref_offload=False
-num_gpus=4
+num_gpus=8
 tensor_model_parallel_size=4
 
-epoch=1000
+epoch=10000
 project_name='DAG'
 
 lr_warmup_steps=0
@@ -52,10 +52,10 @@ filter_groups_metric=acc
 # RUNTIME_ENV=${RUNTIME_ENV:-"${WORKING_DIR}/verl/trainer/runtime_env.yaml"}
 # Paths
 RAY_DATA_HOME=${RAY_DATA_HOME:-"."}
-MODEL_PATH=${MODEL_PATH:-"./models/Qwen/${model_name}"}
+MODEL_PATH=${MODEL_PATH:-"../Model/Qwen/${model_name}"}
 CKPTS_DIR=${CKPTS_DIR:-"${RAY_DATA_HOME}/ckpts/${project_name}/${exp_name}"}
-TRAIN_FILE=${TRAIN_FILE:-"${RAY_DATA_HOME}/SCALER-data/train/${dataset_name}.parquet"}
-TEST_FILE=${TEST_FILE:-["${RAY_DATA_HOME}/SCALER-data/test/bbeh_data.parquet","${RAY_DATA_HOME}/SCALER-data/test/think_MATH-500_MATH-500-processed.parquet","${RAY_DATA_HOME}/SCALER-data/test/think_amc23_amc23_test.parquet","${RAY_DATA_HOME}/SCALER-data/test/think_aime24_aime24_test.parquet","${RAY_DATA_HOME}/SCALER-data/test/MMLU-Pro-Valid.parquet","${RAY_DATA_HOME}/SCALER-data/test/GPQA-Diamond-Test.parquet"]}
+TRAIN_FILE=${TRAIN_FILE:-"../Dataset-P/${dataset_name}.parquet"}
+TEST_FILE=${TEST_FILE:-["../Dataset-P/bbeh_data.parquet","../Dataset-P/think_MATH-500_MATH-500-processed.parquet","../Dataset-P/think_amc23_amc23_test.parquet","../Dataset-P/think_aime24_aime24_test.parquet","../Dataset-P/MMLU-Pro-Valid.parquet","../Dataset-P/GPQA-Diamond-Test.parquet"]}
 
 # Algorithm
 temperature=1.0
