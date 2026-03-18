@@ -481,18 +481,7 @@ class RayDAPOTrainer(RayPPOTrainer):
         """
         # TODO: we have to make sure the batch size is divisible by the dp size
         from verl.trainer.main_ppo import create_rl_dataset, create_rl_sampler
-
-        if val_dataset is None:
-            val_dataset = create_rl_dataset(
-                self.config.data.val_files,
-                self.config.data,
-                self.tokenizer,
-                self.processor,
-                is_train=False,
-                max_samples=self.config.data.get("val_max_samples", -1),
-            )
-        self.val_dataset = val_dataset
-
+        
         if train_dataset is None:
             import pandas as pd
             train_files = self.config.data.train_files
@@ -506,9 +495,22 @@ class RayDAPOTrainer(RayPPOTrainer):
             max_samples = self.config.data.get("train_max_samples", -1)
             if max_samples > 0:
                 self.train_dataset = self.train_dataset[:max_samples]
-        self.train_dataset = [item for item in train_dataset]
+        self.train_dataset = [item for item in self.train_dataset]
+        
+        
+        if val_dataset is None:
+            val_dataset = create_rl_dataset(
+                self.config.data.val_files,
+                self.config.data,
+                self.tokenizer,
+                self.processor,
+                is_train=False,
+                max_samples=self.config.data.get("val_max_samples", -1),
+            )
+        self.val_dataset = val_dataset
 
-        print(f"Train dataset size: {len(self.train_dataset)}, train_data_list length: {len(self.train_data_list)}")
+
+        print(f"Train dataset size: {len(self.train_dataset)}")
 
         if collate_fn is None:
             from verl.utils.dataset.rl_dataset import collate_fn as default_collate_fn

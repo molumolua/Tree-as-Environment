@@ -3,6 +3,8 @@
 dataset/*
 save/*
 model/*
+outputs/*
+wandb/*
 uv.sh
 # Python
 __pycache__/
