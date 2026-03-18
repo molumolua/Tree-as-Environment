@@ -284,27 +284,32 @@ class RayDAPOTrainer(RayPPOTrainer):
                             )
 
                         # Collect the sequence reward for each trajectory
-                        prompt_id2metric_vals = defaultdict(list)
-                        for id, metric_val in zip(
-                            new_batch.non_tensor_batch["id"], new_batch.non_tensor_batch[metric_name], strict=True
+                        prompt_uid2metric_vals = defaultdict(list)
+                        uid2id = dict()
+                        for uid, id,metric_val in zip(
+                            new_batch.non_tensor_batch["uid"], new_batch.non_tensor_batch["id"],new_batch.non_tensor_batch[metric_name], strict=True
                         ):
-                            prompt_id2metric_vals[id].append(metric_val)
+                            prompt_uid2metric_vals[uid].append(metric_val)
+                            uid2id[uid]=id
                             
                         efficiency_sample_num = 0
                         efficiency_metric_sum = 0
-                        for idx,metric_vals in prompt_id2metric_vals.items():
+                        visited_id = []
+                        for uid,metric_vals in prompt_uid2metric_vals.items():
                             avg = np.average(metric_vals)
+                            id = uid2id[uid]
                             if np.std(metric_vals) > 0:
                                 efficiency_sample_num += 1
                                 efficiency_metric_sum += avg
-                            if self.config.trainer.enable_update and avg > self.config.trainer.upgrade_threshold:
-                                example = recover_and_update_example(self.id_to_example[idx])
-                            elif self.config.trainer.enable_update and avg < self.config.trainer.downgrade_threshold:
-                                example = delete_and_update_example(self.id_to_example[idx])
+                            if self.config.trainer.enable_update and id not in visited_id and avg > self.config.trainer.upgrade_threshold:
+                                example = recover_and_update_example(self.id_to_example[id])
+                            elif self.config.trainer.enable_update and id not in visited_id and avg < self.config.trainer.downgrade_threshold:
+                                example = delete_and_update_example(self.id_to_example[id])
                             else:
                                 example = None
+                            visited_id.append(id)
                             next_examples.append(example)
-                                
+
                         logger_data[f"dapo/efficiency_sample_num"]=efficiency_sample_num
                         logger_data[f"dapo/efficiency_metric_avg"]=efficiency_metric_sum/efficiency_sample_num if efficiency_sample_num >0 else 0
                         logger.log(data=logger_data, step=self.global_steps,backend="wandb")
