@@ -22,7 +22,6 @@ from collections import defaultdict
 from copy import deepcopy
 from pprint import pprint
 from typing import Optional
-from time import time
 import numpy as np
 import torch
 from omegaconf import OmegaConf, open_dict
@@ -295,23 +294,41 @@ class RayDAPOTrainer(RayPPOTrainer):
                         efficiency_sample_num = 0
                         efficiency_metric_sum = 0
                         visited_id = []
-                        for uid,metric_vals in prompt_uid2metric_vals.items():
-                            avg = np.average(metric_vals)
-                            id = uid2id[uid]
-                            if np.std(metric_vals) > 0:
-                                efficiency_sample_num += 1
-                                efficiency_metric_sum += avg
-                            if self.config.trainer.enable_update and id not in visited_id and avg > self.config.trainer.upgrade_threshold:
-                                example = recover_and_update_example(self.id_to_example[id])
-                            elif self.config.trainer.enable_update and id not in visited_id and avg < self.config.trainer.downgrade_threshold:
-                                example = delete_and_update_example(self.id_to_example[id])
-                            else:
-                                example = None
-                            visited_id.append(id)
-                            next_examples.append(example)
+                        recover_attempt_count = 0
+                        recover_success_count = 0
+                        delete_attempt_count = 0
+                        delete_success_count = 0
+                        with marked_timer("recover_delete", timing_raw, "cyan"):
+                            for uid,metric_vals in prompt_uid2metric_vals.items():
+                                avg = np.average(metric_vals)
+                                id = uid2id[uid]
+                                if np.std(metric_vals) > 0:
+                                    efficiency_sample_num += 1
+                                    efficiency_metric_sum += avg
+                                if self.config.trainer.enable_update and id not in visited_id and avg > self.config.trainer.upgrade_threshold:
+                                    example = recover_and_update_example(self.id_to_example[id])
+                                    recover_attempt_count += 1
+                                    if example is not None:
+                                        recover_success_count += 1
+                                elif self.config.trainer.enable_update and id not in visited_id and avg < self.config.trainer.downgrade_threshold:
+                                    example = delete_and_update_example(self.id_to_example[id])
+                                    delete_attempt_count += 1
+                                    if example is not None:
+                                        delete_success_count += 1
+                                else:
+                                    example = None
+                                visited_id.append(id)
+                                next_examples.append(example)
 
-                        logger_data[f"dapo/efficiency_sample_num"]=efficiency_sample_num
-                        logger_data[f"dapo/efficiency_metric_avg"]=efficiency_metric_sum/efficiency_sample_num if efficiency_sample_num >0 else 0
+                        logger_data["dag/recover_attempt_count"] = recover_attempt_count
+                        logger_data["dag/recover_success_count"] = recover_success_count
+                        logger_data["dag/delete_attempt_count"] = delete_attempt_count
+                        logger_data["dag/delete_success_count"] = delete_success_count
+                        logger_data["dag/uid2id_len"] = len(uid2id)
+                        logger_data["dag/prompt_uid2metric_vals_len"] = len(prompt_uid2metric_vals)
+                        logger_data["dag/recover_delete_elapsed_sec"] = timing_raw.get("recover_delete", 0)
+                        logger_data[f"dag/efficiency_sample_num"]=efficiency_sample_num
+                        logger_data[f"dag/efficiency_metric_avg"]=efficiency_metric_sum/efficiency_sample_num if efficiency_sample_num >0 else 0
                         logger.log(data=logger_data, step=self.global_steps,backend="wandb")
                         
                         batch = new_batch
@@ -439,20 +456,32 @@ class RayDAPOTrainer(RayPPOTrainer):
                 self.global_steps += 1
                 self.gen_steps += 1
             # update examples and inmemory_dataloader
-            updated_examples = []
-            for example in next_examples:
-                if not example or not get_problem_from_example(example):
-                    updated_example = self.train_dataset[problem_index]
-                    problem_index = (problem_index + 1 )%len(self.train_dataset)
-                else:
-                    updated_example = example
-                updated_examples.append(updated_example)
-                    
-            next_train_data = [ get_problem_from_example(example) for example in updated_examples]
-            print("len next_examples:",len(next_examples))
-            print("len updated_examples:",len(updated_examples))
-            print("len next_train_data:",len(next_train_data))
-            inmemory_dataloader = self.createInmemoryDataLoader(next_train_data)
+            timing_raw_update = defaultdict(float)
+            with marked_timer("update_examples", timing_raw_update):
+                updated_examples = []
+                num_replaced_from_dataset = 0
+                num_kept_from_next = 0
+                for example in next_examples:
+                    if not example or not get_problem_from_example(example):
+                        updated_example = self.train_dataset[problem_index]
+                        problem_index = (problem_index + 1 )%len(self.train_dataset)
+                        num_replaced_from_dataset += 1
+                    else:
+                        updated_example = example
+                        num_kept_from_next += 1
+                    updated_examples.append(updated_example)
+
+                next_train_data = [ get_problem_from_example(example) for example in updated_examples]
+                inmemory_dataloader = self.createInmemoryDataLoader(next_train_data)
+            update_examples_log_data = {
+                "dag/len_next_examples": len(next_examples),
+                "dag/len_updated_examples": len(updated_examples),
+                "dag/len_next_train_data": len(next_train_data),
+                "dag/num_kept_from_next": num_kept_from_next,
+                "dag/num_replaced_from_dataset": num_replaced_from_dataset,
+                "dag/update_examples_sec": timing_raw_update.get("update_examples", 0),
+            }
+            logger.log(data=update_examples_log_data, step=self.global_steps, backend="wandb")
             next_examples = []
         # check if last step checkpint exists
         checkpoint_dir = os.path.join(self.config.trainer.default_local_dir, f"global_step_{self.global_steps}")
