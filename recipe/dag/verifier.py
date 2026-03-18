@@ -182,7 +182,7 @@ class RewardModelWorker(Worker):
                 # score -= difference * 0.05
             # Record the score at the final valid response token index.
             reward_tensor[i, valid_response_length - 1] = score
-            scores_for_acc.append(score)
+            scores_for_acc.append(max(score,0))
 
         batch = TensorDict({"rm_scores": reward_tensor}, batch_size=reward_tensor.shape[0])
         non_tensor_batch = {"acc": np.array(scores_for_acc, dtype=object)}

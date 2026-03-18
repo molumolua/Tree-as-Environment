@@ -193,14 +193,14 @@ def get_problem_from_example(example):
     end_index = -1
     for idx in range(n-1,-1,-1):
         if idx not in flat_deleted:
-            question = steps[idx].get("question") or ""
-            ground_truth = steps[idx].get("conclusion") or ""
+            question = str(steps[idx].get("question")) or ""
+            ground_truth = str(steps[idx].get("conclusion")) or ""
             end_index = idx
             break
 
     for idx in range(end_index):
         if idx in flat_deleted:
-            conditions.append(steps[idx].get("conclusion") or "")
+            conditions.append(str(steps[idx].get("conclusion")) or "")
     
     problem_prompt = QUESTION_PROMPT_TEMPLATE.format(conditions_block= "\n".join(f"- {c}" for c in conditions) if conditions else "(none)",\
                     question=question if len(question) > 0 else "(none)")
@@ -229,11 +229,12 @@ def get_problem_from_example(example):
             }
         }
     else:
+        # raise ValueError(f"ERROR! in example:{example}")
         return None
 def delete_and_update_example(example):
     steps = _get_summary_steps_from_example(example)
     initial_conditions = _get_initial_conditions_from_example(example)
-    deleted =  example.get("deleted",[])
+    deleted =  list(example.get("deleted",[]))
     to_delete, last_parent_idx = min_deleted_steps_one_vertex(steps,initial_conditions,deleted)
 
     if last_parent_idx == None:
@@ -244,11 +245,9 @@ def delete_and_update_example(example):
     return example
 
 def recover_and_update_example(example):
-    deleted =  example.get("deleted",[])
+    deleted =  list(example.get("deleted",[]))
     if len(deleted) == 0:
         return None
-    steps = _get_summary_steps_from_example(example)
-    initial_conditions = _get_initial_conditions_from_example(example)
     deleted.pop()
     example["deleted"] = deleted
     return example

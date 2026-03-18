@@ -22,7 +22,7 @@ from collections import defaultdict
 from copy import deepcopy
 from pprint import pprint
 from typing import Optional
-
+from time import time
 import numpy as np
 import torch
 from omegaconf import OmegaConf, open_dict
@@ -297,9 +297,9 @@ class RayDAPOTrainer(RayPPOTrainer):
                             if np.std(metric_vals) > 0:
                                 efficiency_sample_num += 1
                                 efficiency_metric_sum += avg
-                            if self.trainer.enable_update and avg > self.config.trainer.upgrade_threshold:
+                            if self.config.trainer.enable_update and avg > self.config.trainer.upgrade_threshold:
                                 example = recover_and_update_example(self.id_to_example[idx])
-                            elif self.trainer.enable_update and avg < self.config.trainer.downgrade_threshold:
+                            elif self.config.trainer.enable_update and avg < self.config.trainer.downgrade_threshold:
                                 example = delete_and_update_example(self.id_to_example[idx])
                             else:
                                 example = None
@@ -422,17 +422,6 @@ class RayDAPOTrainer(RayPPOTrainer):
                 batch = None
                 num_gen_batches = 0
 
-                # update examples and inmemory_dataloader
-                for example in next_examples:
-                    if not example:
-                        example = self.train_dataset[problem_index]
-                        problem_index = (problem_index + 1 )%len(self.train_dataset)
-
-                next_train_data = [ get_problem_from_example(example) for example in next_examples]
-                inmemory_dataloader = self.createInmemoryDataLoader(next_train_data)
-                next_examples = []
-
-
                 # TODO: make a canonical logger that supports various backend
                 logger.log(data=metrics, step=self.global_steps)
 
@@ -444,6 +433,22 @@ class RayDAPOTrainer(RayPPOTrainer):
                 progress_bar.update(1)
                 self.global_steps += 1
                 self.gen_steps += 1
+            # update examples and inmemory_dataloader
+            updated_examples = []
+            for example in next_examples:
+                if not example or not get_problem_from_example(example):
+                    updated_example = self.train_dataset[problem_index]
+                    problem_index = (problem_index + 1 )%len(self.train_dataset)
+                else:
+                    updated_example = example
+                updated_examples.append(updated_example)
+                    
+            next_train_data = [ get_problem_from_example(example) for example in updated_examples]
+            print("len next_examples:",len(next_examples))
+            print("len updated_examples:",len(updated_examples))
+            print("len next_train_data:",len(next_train_data))
+            inmemory_dataloader = self.createInmemoryDataLoader(next_train_data)
+            next_examples = []
         # check if last step checkpint exists
         checkpoint_dir = os.path.join(self.config.trainer.default_local_dir, f"global_step_{self.global_steps}")
         if not os.path.exists(checkpoint_dir):
