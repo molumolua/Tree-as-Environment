@@ -473,6 +473,10 @@ class RayDAPOTrainer(RayPPOTrainer):
 
                 next_train_data = [ get_problem_from_example(example) for example in updated_examples]
                 inmemory_dataloader = self.createInmemoryDataLoader(next_train_data)
+            avg_deleted_len = (
+                np.mean([len(list(ex.get("deleted", []))) for ex in self.train_dataset])
+                if self.train_dataset else 0.0
+            )
             update_examples_log_data = {
                 "dag/len_next_examples": len(next_examples),
                 "dag/len_updated_examples": len(updated_examples),
@@ -480,6 +484,7 @@ class RayDAPOTrainer(RayPPOTrainer):
                 "dag/num_kept_from_next": num_kept_from_next,
                 "dag/num_replaced_from_dataset": num_replaced_from_dataset,
                 "dag/update_examples_sec": timing_raw_update.get("update_examples", 0),
+                "dag/avg_deleted_len": float(avg_deleted_len),
             }
             logger.log(data=update_examples_log_data, step=self.global_steps, backend="wandb")
             next_examples = []
