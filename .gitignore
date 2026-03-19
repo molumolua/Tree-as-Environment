@@ -6,6 +6,7 @@ model/*
 outputs/*
 wandb/*
 uv.sh
+ckpts/*
 # Python
 __pycache__/
 *.py[cod]

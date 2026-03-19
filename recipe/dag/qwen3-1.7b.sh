@@ -3,13 +3,18 @@ set -euxo pipefail
 export WANDB_MODE=offline
 dataset_name="Tree-as-Environment"
 model_name="Qwen3-1.7B-Base"
+
+enable_update=True
+upgrade_threshold=0.75
+downgrade_threshold=0.25
+val_before_train=False
+
 offload=False
 ref_offload=False
 num_gpus=8
 tensor_model_parallel_size=4
-reward_model_name="TIGER-Lab/general-verifier"
 epoch=10000
-project_name='DAG'
+
 
 lr_warmup_steps=0
 lr=1e-6
@@ -17,13 +22,13 @@ test_and_save_freq=20
 n_resp_per_prompt=8
 train_prompt_bsz=64
 train_prompt_mini_bsz=64
-val_before_train=True
 
 
 
 
-
-exp_name=${exp_name:-"DAG-${dataset_name}-model-${model_name}-lr-${lr}-bsz-${train_prompt_bsz}-n_resp-${n_resp_per_prompt}-mini-${train_prompt_mini_bsz}"}
+project_name='DAG'
+reward_model_name="TIGER-Lab/general-verifier"
+exp_name=${exp_name:-"DAG-${dataset_name}-update-${enable_update}-up-${upgrade_threshold}-down-${downgrade_threshold}-model-${model_name}-lr-${lr}-bsz-${train_prompt_bsz}-n_resp-${n_resp_per_prompt}-mini-${train_prompt_mini_bsz}"}
 # exp_name=${exp_name:-"None-test-data-True-select-False-batch-size-192-64-64-1-7-0-7-replay-0-entropy_coeff-0-dataset-think-DeepMath-103K-model-Qwen2.5-7B"}
 adv_estimator=grpo
 
@@ -149,6 +154,6 @@ PYTHONUNBUFFERED=1 python3 -m recipe.dag.main_dapo \
     reward_model.strategy=verifier \
     reward_model.reward_manager=naive \
     +trainer.enable_update=True \
-    +trainer.upgrade_threshold=0.75 \
-    +trainer.downgrade_threshold=0.25 
+    +trainer.upgrade_threshold=${upgrade_threshold} \
+    +trainer.downgrade_threshold=${downgrade_threshold} 
 
