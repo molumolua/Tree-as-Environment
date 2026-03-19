@@ -194,7 +194,7 @@ def get_problem_from_example(example):
     for idx in range(n-1,-1,-1):
         if idx not in flat_deleted:
             question = str(steps[idx].get("question")) or ""
-            ground_truth = str(steps[idx].get("conclusion")) or ""
+            ground_truth = str(steps[idx].get("answer")) or ""
             end_index = idx
             break
 

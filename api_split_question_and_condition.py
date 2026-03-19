@@ -144,7 +144,7 @@ def main():
     parser.add_argument("--save_meta_name", type=str, default="output_with_split_meta.json")
     parser.add_argument("--model", type=str, default="glm-4.7")
     parser.add_argument("--n_processes", type=int, default=20)
-    parser.add_argument("--temperature", type=float, default=0.0)
+    parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--timeout", type=int, default=300)
     parser.add_argument("--batch_size", type=int, default=256)
     parser.add_argument("--inner_max_try", type=int, default=1)
