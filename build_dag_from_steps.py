@@ -306,7 +306,7 @@ def run_on_parquet(
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="从 parquet 的 steps 找最小删除 step 集合（保持单顶点），结果写回 parquet")
-    parser.add_argument("--parquet", type=str, default="save/filtered_train.parquet")
+    parser.add_argument("--parquet", type=str, default="save2/filtered_train.parquet")
     parser.add_argument("--output", type=str, default=None, help="输出 parquet 路径（不指定则不写盘）")
     args = parser.parse_args()
 

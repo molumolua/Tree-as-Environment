@@ -187,7 +187,7 @@ class RewardModelWorker(Worker):
             scores_for_acc.append(acc)
 
         batch = TensorDict({"rm_scores": reward_tensor}, batch_size=reward_tensor.shape[0])
-        non_tensor_batch = {"acc": np.array(scores_for_acc, dtype=object)}
+        non_tensor_batch = {"acc": np.array(scores_for_acc, dtype=np.float32)}
         self.llm.sleep(2)
         torch.cuda.empty_cache()
         return DataProto(batch=batch, non_tensor_batch=non_tensor_batch)

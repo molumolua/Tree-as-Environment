@@ -438,6 +438,10 @@ class RayDAPOTrainer(RayPPOTrainer):
                 # TODO: implement actual tflpo and theoretical tflpo
                 n_gpus = self.resource_pool_manager.get_n_gpus()
                 metrics.update(compute_throughout_metrics(batch=batch, timing_raw=timing_raw, n_gpus=n_gpus))
+                if "acc" in batch.non_tensor_batch:
+                    acc_vals = np.asarray(batch.non_tensor_batch["acc"], dtype=np.float32)
+                    if acc_vals.size > 0:
+                        metrics["reward_model/acc"] = float(np.mean(acc_vals))
                 timing_raw = defaultdict(float)  # clear timing
 
                 metrics["train/num_gen_batches"] = num_gen_batches
