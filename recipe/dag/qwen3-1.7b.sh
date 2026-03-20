@@ -11,7 +11,7 @@ val_before_train=False
 
 offload=False
 ref_offload=False
-num_gpus=8
+num_gpus=4
 tensor_model_parallel_size=4
 epoch=10000
 
@@ -28,7 +28,7 @@ train_prompt_mini_bsz=64
 
 project_name='DAG'
 reward_model_name="TIGER-Lab/general-verifier"
-exp_name=${exp_name:-"DAG-${dataset_name}-update-${enable_update}-up-${upgrade_threshold}-down-${downgrade_threshold}-model-${model_name}-lr-${lr}-bsz-${train_prompt_bsz}-n_resp-${n_resp_per_prompt}-mini-${train_prompt_mini_bsz}"}
+exp_name=${exp_name:-"${dataset_name}-update-${enable_update}-up-${upgrade_threshold}-down-${downgrade_threshold}-model-${model_name}-lr-${lr}-bsz-${train_prompt_bsz}-n_resp-${n_resp_per_prompt}-mini-${train_prompt_mini_bsz}"}
 # exp_name=${exp_name:-"None-test-data-True-select-False-batch-size-192-64-64-1-7-0-7-replay-0-entropy_coeff-0-dataset-think-DeepMath-103K-model-Qwen2.5-7B"}
 adv_estimator=grpo
 

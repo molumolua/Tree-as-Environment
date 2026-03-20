@@ -165,6 +165,7 @@ class RewardModelWorker(Worker):
             zip(ground_truths, solutions, responses, valid_response_lengths)
         ):
             score = 0.0
+            acc = 0.0
             # Penalize if solution extraction failed.
             if solution is None:
                 score -= 0.5
@@ -174,15 +175,16 @@ class RewardModelWorker(Worker):
             # Award a score and adjust based on token length difference if verification passes.
             if VERIFIER_PASS_TAG in verification:
                 score += 1.0
-                # tokenized_solution = self.tokenizer.encode(solution)
-                # tokenized_ground_truth = self.tokenizer.encode(ground_truth)
-                # # Penalize based on the absolute difference in token count (capped to 10 tokens).
-                # difference = abs(len(tokenized_solution) - len(tokenized_ground_truth))
-                # difference = min(difference, 10)
-                # score -= difference * 0.05
+                acc += 1.0
+                tokenized_solution = self.tokenizer.encode(solution)
+                tokenized_ground_truth = self.tokenizer.encode(ground_truth)
+                # Penalize based on the absolute difference in token count (capped to 10 tokens).
+                difference = abs(len(tokenized_solution) - len(tokenized_ground_truth))
+                difference = min(difference, 10)
+                score -= difference * 0.05
             # Record the score at the final valid response token index.
             reward_tensor[i, valid_response_length - 1] = score
-            scores_for_acc.append(max(score,0))
+            scores_for_acc.append(acc)
 
         batch = TensorDict({"rm_scores": reward_tensor}, batch_size=reward_tensor.shape[0])
         non_tensor_batch = {"acc": np.array(scores_for_acc, dtype=object)}
